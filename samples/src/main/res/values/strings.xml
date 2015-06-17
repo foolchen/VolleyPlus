@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Volley-Demo</string>
+    <string name="action_settings">Settings</string>
+    <string name="text_start_request">开始请求</string>
+</resources>
