@@ -2,6 +2,7 @@ package com.foolchen.demo;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
@@ -57,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.button_request)
     public void load() {
         mTextResult.setText(null);
-        StringPolicyRequest request = new StringPolicyRequest("http://mi.xcar.com.cn/interface/gcpapp/series.php?brandId=1", new CallBack<String>() {
+        StringPolicyRequest request = new StringPolicyRequest("http://www.cnblogs.com/chenchong/p/3256192.html", new CallBack<String>() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 mTextResult.setText(error.toString());
@@ -65,12 +66,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onCacheResponse(String response) {
-                mTextResult.setText("cache\n" + response);
+                mTextResult.setText(Html.fromHtml("cache<br/>" + response));
             }
 
             @Override
             public void onResponse(String response) {
-                mTextResult.setText(response);
+                mTextResult.setText(Html.fromHtml("cache<br/>" + response));
             }
         });
         final RequestPolicy policy = (RequestPolicy) mSpinner.getSelectedItem();
