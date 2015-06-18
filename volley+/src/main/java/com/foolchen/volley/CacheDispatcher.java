@@ -102,111 +102,102 @@ public class CacheDispatcher extends Thread {
                 // 此处尝试获取策略
                 RequestPolicy policy = RequestPolicy.DEFAULT;
                 if (request instanceof PolicyRequest) {
-                    request.addMarker("policy request find");
+                    request.addMarker("policy-request-found");
                     policy = ((PolicyRequest) request).getPolicy();
                 }
 
-                if (policy == RequestPolicy.NET_ONLY || policy == RequestPolicy.NET_AND_CACHE) {
-                    // 请求策略为只请求网络/请求网络并且缓存
-                    // 则直接将request添加到网络请求队列中
-                    request.addMarker("net-only/net-and-cache,add request to net request queue");
-                    mNetworkQueue.add(request);
-                    continue;
-                }
-
-                // Attempt to retrieve this item from cache.
-                // 尝试从缓存中获取key对应的数据
-                Cache.Entry entry = mCache.get(request.getCacheKey());
-                if (entry == null) {
-                    request.addMarker("cache-miss");
-                    if (policy == RequestPolicy.DEFAULT) {
+                if (policy == RequestPolicy.DEFAULT) {
+                    // Attempt to retrieve this item from cache.
+                    // 尝试从缓存中获取key对应的数据
+                    Cache.Entry entry = mCache.get(request.getCacheKey());
+                    if (entry == null) {
+                        request.addMarker("cache-miss");
                         // 如果为默认请求策略,则在没有读取到缓存的情况下,直接将request添加到网络请求队列中
                         // Cache miss; send off to the network dispatcher.
                         // 没有获取到数据,则将request添加到网络请求队列中
                         mNetworkQueue.put(request);
-                    } else if (policy == RequestPolicy.CACHE_ONLY) {
-                        // 请求策略为只读缓存,则在此处进行回调
-                        request.addMarker("policy is cache-only,execute callback");
-                        Response<?> response = request.parseNetworkResponse(
-                                new NetworkResponse());
-                        response.cache = true;
-                        request.addMarker("cache-miss,and deliver empty response");
-                        mDelivery.postResponse(request, response);
+                        continue;
                     }
-                    continue;
-                }
 
-                if (policy == RequestPolicy.CACHE_ONLY) {
-                    // 如果只读缓存,则此处直接回调缓存
+                    // If it is completely expired, just send it to the network.
+                    // 读取到了缓存,但是缓存过期了,将request添加到网络请求队列中
+                    if (entry.isExpired()) {
+                        request.addMarker("cache-hit-expired");
+                        request.setCacheEntry(entry);
+                        mNetworkQueue.put(request);
+                        continue;
+                    }
+
+                    // We have a cache hit; parse its data for delivery back to the request.
+                    // 获取到了可用(未过期)的缓存,则将它转换为需要的response回传给request
+                    request.addMarker("cache-hit");
                     Response<?> response = request.parseNetworkResponse(
                             new NetworkResponse(entry.data, entry.responseHeaders));
-                    response.cache = true;
-                    request.addMarker("cache-hit-callback");
-                    mDelivery.postResponse(request, response);
-                    continue;
-                } else if (policy == RequestPolicy.CACHE_THEN_NET) {
-                    // 如果先读缓存,后访问网络,则才此处添加到网络请求队列中
-                    // 如果只读缓存,则此处直接回调缓存
-                    Response<?> response = request.parseNetworkResponse(
-                            new NetworkResponse(entry.data, entry.responseHeaders));
-                    response.cache = true;
-                    request.addMarker("cache-hit-callback");
-                    mDelivery.postResponse(request, response);
-                    request.addMarker("add request to net request queue");
-                    continue;
-                }
+                    request.addMarker("cache-hit-parsed");
 
-                // If it is completely expired, just send it to the network.
-                // 读取到了缓存,但是缓存过期了,将request添加到网络请求队列中
-                //TODO 此处尽管已过期,但还是可以使用
-                //TODO 可以既将缓存传递给UI,也将request添加到网络请求队列中
-                //TODO 此出修改,可以实现先显示缓存,后更新网络数据
-                if (entry.isExpired()) {
-                    request.addMarker("cache-hit-expired");
-                    request.setCacheEntry(entry);
-                    mNetworkQueue.put(request);
-                    continue;
-                }
+                    if (!entry.refreshNeeded()) {
+                        // Completely unexpired cache hit. Just deliver the response.
+                        // 如果缓存没有超过存活时间,则直接回调
+                        mDelivery.postResponse(request, response);
+                    } else {
+                        // Soft-expired cache hit. We can deliver the cached response,
+                        // but we need to also send the request to the network for
+                        // refreshing.
+                        // 缓存超过了存活时间,我们可以将缓存进行回调
+                        // 但是也需要进行网络请求刷新数据
+                        request.addMarker("cache-hit-refresh-needed");
+                        request.setCacheEntry(entry);
 
-                // We have a cache hit; parse its data for delivery back to the request.
-                // 获取到了可用(未过期)的缓存,则将它转换为需要的response回传给request
-                request.addMarker("cache-hit");
-                Response<?> response = request.parseNetworkResponse(
-                        new NetworkResponse(entry.data, entry.responseHeaders));
-                request.addMarker("cache-hit-parsed");
+                        // Mark the response as intermediate.
+                        // 此时不会执行回调
+                        response.intermediate = true;
 
-                if (!entry.refreshNeeded()) {
-                    // Completely unexpired cache hit. Just deliver the response.
-                    // 如果缓存没有超过存活时间,则直接回调
-                    // TODO 此处可修改,首先返回缓存
-                    // TODO 并且将request假如到网络请求队列
-                    // TODO 实现先返回缓存,后刷新数据
-                    mDelivery.postResponse(request, response);
-                } else {
-                    // Soft-expired cache hit. We can deliver the cached response,
-                    // but we need to also send the request to the network for
-                    // refreshing.
-                    // 缓存超过了存活时间,我们可以将缓存进行回调
-                    // 但是也需要进行网络请求刷新数据
-                    request.addMarker("cache-hit-refresh-needed");
-                    request.setCacheEntry(entry);
-
-                    // Mark the response as intermediate.
-                    // 此时不会执行回调
-                    response.intermediate = true;
-
-                    // Post the intermediate response back to the user and have
-                    // the delivery then forward the request along to the network.
-                    mDelivery.postResponse(request, response, new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                mNetworkQueue.put(request);
-                            } catch (InterruptedException e) {
-                                // Not much we can do about this.
+                        // Post the intermediate response back to the user and have
+                        // the delivery then forward the request along to the network.
+                        mDelivery.postResponse(request, response, new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    mNetworkQueue.put(request);
+                                } catch (InterruptedException e) {
+                                    // Not much we can do about this.
+                                }
                             }
+                        });
+                    }
+                } else {
+                    Cache.Entry entry = mCache.get(request.getCacheKey());
+                    if (policy == RequestPolicy.CACHE_ONLY || policy == RequestPolicy.CACHE_THEN_NET) {
+                        // 请求策略为CACHE_ONLY
+                        if (entry == null) {
+                            // 缓存为空,则回调空response
+                            request.addMarker("cache-miss");
+                            Response<?> response = request.parseNetworkResponse(
+                                    new NetworkResponse());
+                            response.cache = true;
+                            // Mark the response as intermediate.
+                            response.intermediate = policy == RequestPolicy.CACHE_THEN_NET;
+                            request.addMarker("cache-miss-deliver-empty-response");
+                            mDelivery.postResponse(request, response);
+                        } else {
+                            // 缓存不为空,则回调缓存response
+                            Response<?> response = request.parseNetworkResponse(
+                                    new NetworkResponse(entry.data, entry.responseHeaders));
+                            response.cache = true;
+                            // Mark the response as intermediate.
+                            response.intermediate = policy == RequestPolicy.CACHE_THEN_NET;
+                            request.addMarker("cache-hit-deliver");
+                            mDelivery.postResponse(request, response);
                         }
-                    });
+                        if (policy == RequestPolicy.CACHE_ONLY) {
+                            // 如果为只读缓存,则此处不再继续
+                            continue;
+                        }
+                        // 如果为先缓存后网络,则添加到网络请求队列中
+                        request.addMarker("add-request-to-network-queue");
+                        request.setCacheEntry(entry);
+                        mNetworkQueue.put(request);
+                    }
                 }
 
             } catch (InterruptedException e) {
@@ -214,7 +205,6 @@ public class CacheDispatcher extends Thread {
                 if (mQuit) {
                     return;
                 }
-                continue;
             }
         }
     }

@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void initSpinner() {
-        RequestPolicy[] policies = {RequestPolicy.DEFAULT, RequestPolicy.CACHE_ONLY, RequestPolicy.NET_ONLY, RequestPolicy.NET_AND_CACHE, RequestPolicy.CACHE_THEN_NET};
+        RequestPolicy[] policies = {RequestPolicy.DEFAULT, RequestPolicy.CACHE_ONLY, RequestPolicy.CACHE_THEN_NET};
         ArrayAdapter<RequestPolicy> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, policies);
         mSpinner.setAdapter(adapter);
     }
