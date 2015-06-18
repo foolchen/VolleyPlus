@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(String response) {
-                mTextResult.setText(Html.fromHtml("cache<br/>" + response));
+                mTextResult.setText(Html.fromHtml(response));
             }
         });
         final RequestPolicy policy = (RequestPolicy) mSpinner.getSelectedItem();
