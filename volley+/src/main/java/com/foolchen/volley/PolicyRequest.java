@@ -11,6 +11,8 @@ import com.foolchen.volley.custom.RequestPolicy;
  */
 public abstract class PolicyRequest<T> extends Request<T> {
     private RequestPolicy policy;
+    /** 在网络数据已经返回的情况下,则不再需要缓存数据,此时抛弃 */
+    public boolean cacheAbandon;
 
     PolicyRequest(String url, CallBack callBack) {
         this(RequestPolicy.DEFAULT, url, callBack);

@@ -98,11 +98,21 @@ public class ExecutorDelivery implements ResponseDelivery {
 
             if (mRequest instanceof PolicyRequest) {
                 if (mResponse.isSuccess()) {
-                    if (mResponse.isCache()) {
+                    if (!((PolicyRequest) mRequest).cacheAbandon) {
+                        // 在cacheAbandon=false(接口数据尚未成功返回时),才返回缓存数据
+                        // 否则,则直接跳过
+                        if (mResponse.isCache()) {
+                            ((PolicyRequest) mRequest).deliverCache(mResponse.result);
+                        } else {
+                            mRequest.deliverResponse(mResponse.result);
+                        }
+                    }
+
+                    /*if (mResponse.isCache()) {
                         ((PolicyRequest) mRequest).deliverCache(mResponse.result);
                     } else {
                         mRequest.deliverResponse(mResponse.result);
-                    }
+                    }*/
                 } else {
                     mRequest.deliverError(mResponse.error);
                 }
