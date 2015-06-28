@@ -9,3 +9,47 @@
 * 直接使用Gson进行解析,而不再返回字符串(已完成)
 * 自定义缓存
 * 计算缓存大小
+
+##使用方法
+生成实体类
+
+```
+GsonPolicyRequest<TestModel> request = new GsonPolicyRequest<TestModel>(url, TestModel.class, new CallBack<TestModel>() {
+            @Override
+            public void onCacheResponse(TestModel response) {
+
+            }
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+
+            @Override
+            public void onResponse(TestModel response) {
+
+            }
+        });
+        RequestManager.addRequest(request, this);
+```
+生成List
+
+```
+GsonPolicyRequest<List<TestModel>> request = new GsonPolicyRequest<List<TestModel>>(url, Util.<List<TestModel>>generateTypeOfT(), new CallBack<List<TestModel>>() {
+            @Override
+            public void onCacheResponse(List<TestModel> response) {
+
+            }
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+
+            @Override
+            public void onResponse(List<TestModel> response) {
+
+            }
+        });
+         RequestManager.addRequest(request, this);
+```

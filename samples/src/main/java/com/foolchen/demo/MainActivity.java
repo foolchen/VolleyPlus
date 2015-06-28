@@ -12,7 +12,6 @@ import android.widget.TextView;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.OnClick;
-import com.foolchen.demo.volley.RequestManager;
 import com.foolchen.volley.CallBack;
 import com.foolchen.volley.StringPolicyRequest;
 import com.foolchen.volley.VolleyError;
@@ -77,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
         final RequestPolicy policy = (RequestPolicy) mSpinner.getSelectedItem();
         request.setPolicy(policy);
         request.setShouldCache(true);
-        RequestManager.addRequest(request, this);
     }
 
     void initSpinner() {
