@@ -13,7 +13,7 @@
 ##使用方法
 生成实体类
 
-```
+```java
 GsonPolicyRequest<TestModel> request = new GsonPolicyRequest<TestModel>(url, TestModel.class, new CallBack<TestModel>() {
             @Override
             public void onCacheResponse(TestModel response) {
@@ -34,7 +34,7 @@ GsonPolicyRequest<TestModel> request = new GsonPolicyRequest<TestModel>(url, Tes
 ```
 生成List
 
-```
+```java
 GsonPolicyRequest<List<TestModel>> request = new GsonPolicyRequest<List<TestModel>>(url, Util.<List<TestModel>>generateTypeOfT(), new CallBack<List<TestModel>>() {
             @Override
             public void onCacheResponse(List<TestModel> response) {
