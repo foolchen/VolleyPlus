@@ -5,6 +5,7 @@ import com.foolchen.volley.toolbox.HttpHeaderParser;
 import com.google.gson.Gson;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 
 /**
  * 使用Gson解析数据的{@link PolicyRequest}<p/
@@ -16,24 +17,24 @@ import java.io.UnsupportedEncodingException;
  */
 public class GsonPolicyRequest<T> extends PolicyRequest<T> {
     private CallBack<T> mCallBack;
-    private Class<T> mClazz;
+    private Type mTypeOfT;
 
-    public GsonPolicyRequest(String url, Class<T> clazz, CallBack<T> callBack) {
+    public GsonPolicyRequest(String url, Type typeOfT, CallBack<T> callBack) {
         super(url, callBack);
         this.mCallBack = callBack;
-        this.mClazz = clazz;
+        this.mTypeOfT = typeOfT;
     }
 
-    public GsonPolicyRequest(RequestPolicy policy, String url, Class<T> clazz, CallBack<T> callback) {
+    public GsonPolicyRequest(RequestPolicy policy, String url, Type typeOfT, CallBack<T> callback) {
         super(policy, url, callback);
         this.mCallBack = callback;
-        this.mClazz = clazz;
+        this.mTypeOfT = typeOfT;
     }
 
-    public GsonPolicyRequest(RequestPolicy policy, int method, String url, Class<T> clazz, CallBack<T> callback) {
+    public GsonPolicyRequest(RequestPolicy policy, int method, String url, Type typeOfT, CallBack<T> callback) {
         super(policy, method, url, callback);
         this.mCallBack = callback;
-        this.mClazz = clazz;
+        this.mTypeOfT = typeOfT;
     }
 
     @Override
@@ -53,7 +54,7 @@ public class GsonPolicyRequest<T> extends PolicyRequest<T> {
         } catch (UnsupportedEncodingException e) {
             parsed = new String(response.data);
         }
-        T result = new Gson().fromJson(parsed, mClazz);
+        T result = new Gson().fromJson(parsed, mTypeOfT);
         return Response.success(result, HttpHeaderParser.parseCacheHeaders(response));
     }
 
