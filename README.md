@@ -34,13 +34,13 @@ GsonPolicyRequest<TestModel> request = new GsonPolicyRequest<TestModel>(url, Tes
             public void onCacheErrorResponse(VolleyError error) {
             }
         });
-        RequestManager.addRequest(request, this);
+RequestManager.addRequest(request, this);
 ```
 
 生成List
 
 ``` java
-GsonPolicyRequest<List<TestModel>> request = new GsonPolicyRequest<List<TestModel>>(url, Util.<List<TestModel>>generateTypeOfT(), new CallBack<List<TestModel>>() {
+GsonPolicyRequest<List<TestModel>> request = new GsonPolicyRequest<List<TestModel>>(url, Util.<TestModel>generateTypeOfList(), new CallBack<List<TestModel>>() {
             @Override
             public void onErrorResponse(VolleyError error) {
 
@@ -59,5 +59,5 @@ GsonPolicyRequest<List<TestModel>> request = new GsonPolicyRequest<List<TestMode
             public void onCacheErrorResponse(VolleyError error) {
             }
         });
-         RequestManager.addRequest(request, this);
+RequestManager.addRequest(request, this);
 ```
