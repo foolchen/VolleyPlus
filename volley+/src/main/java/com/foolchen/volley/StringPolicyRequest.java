@@ -12,35 +12,63 @@ import java.io.UnsupportedEncodingException;
  *         下午11:25
  */
 public class StringPolicyRequest extends PolicyRequest<String> {
-    private CallBack<String> mCallBack;
+    /** 网络数据回调接口 */
+    private final CallBack<String> mCallBack;
+    /** 缓存数据回调接口 */
+    private CacheCallBack<String> mCacheCallBack;
 
-    public StringPolicyRequest(String url, CallBack<String> callBack) {
+    /**
+     * @see #StringPolicyRequest(String, CallBack, CacheCallBack)
+     */
+    public StringPolicyRequest(final String url, final CallBack<String> callBack) {
         super(url, callBack);
         this.mCallBack = callBack;
     }
 
-    @Override
-    protected void deliverCache(String response) {
-        mCallBack.onCacheResponse(response);
+    /**
+     * 构造函数
+     *
+     * @param url           要请求的URL
+     * @param callBack      网络数据回调接口
+     * @param cacheCallBack 缓存数据回调接口
+     */
+    public StringPolicyRequest(final String url, final CallBack<String> callBack, final CacheCallBack<String> cacheCallBack) {
+        super(url, callBack);
+        this.mCallBack = callBack;
+        this.mCacheCallBack = cacheCallBack;
     }
 
     @Override
-    protected Response<String> parseNetworkResponse(NetworkResponse response) {
+    protected void deliverCache(final String response) {
+        mCacheCallBack.onCacheResponse(response);
+    }
+
+    @Override
+    protected void deliverCacheError(final VolleyError error) {
+        mCacheCallBack.onCacheErrorResponse(error);
+
+    }
+
+    @Override
+    protected Response<String> parseNetworkResponse(final NetworkResponse response) {
+        Response<String> result;
         if (response.empty) {
             // 如果返回为空(在CACHE_ONLY情况下可能会出现),则直接返回空
-            return Response.success(null, null);
+            result = Response.success(null, null);
+        } else {
+            String parsed;
+            try {
+                parsed = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+            } catch (UnsupportedEncodingException e) {
+                parsed = new String(response.data);
+            }
+            result = Response.success(parsed, HttpHeaderParser.parseCacheHeaders(response));
         }
-        String parsed;
-        try {
-            parsed = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-        } catch (UnsupportedEncodingException e) {
-            parsed = new String(response.data);
-        }
-        return Response.success(parsed, HttpHeaderParser.parseCacheHeaders(response));
+        return result;
     }
 
     @Override
-    protected void deliverResponse(String response) {
+    protected void deliverResponse(final String response) {
         mCallBack.onResponse(response);
     }
 }

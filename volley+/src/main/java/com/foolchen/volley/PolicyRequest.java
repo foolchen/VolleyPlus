@@ -53,5 +53,17 @@ public abstract class PolicyRequest<T> extends Request<T> {
         return policy;
     }
 
+    /**
+     * 对缓存进行回调
+     *
+     * @param response 要回调的数据
+     */
     protected abstract void deliverCache(T response);
+
+    /**
+     * 对缓存错误进行回调
+     *
+     * @param error 读取缓存过程中发生的错误
+     */
+    protected abstract void deliverCacheError(VolleyError error);
 }

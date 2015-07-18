@@ -98,23 +98,25 @@ public class ExecutorDelivery implements ResponseDelivery {
 
             if (mRequest instanceof PolicyRequest) {
                 if (mResponse.isSuccess()) {
-                    if (!((PolicyRequest) mRequest).cacheAbandon) {
+                    if (!((PolicyRequest) mRequest).cacheAbandon && mResponse.isCache()) {
                         // 在cacheAbandon=false(接口数据尚未成功返回时),才返回缓存数据
                         // 否则,则直接跳过
-                        if (mResponse.isCache()) {
-                            ((PolicyRequest) mRequest).deliverCache(mResponse.result);
-                        } else {
-                            mRequest.deliverResponse(mResponse.result);
-                        }
-                    }
-
-                    /*if (mResponse.isCache()) {
                         ((PolicyRequest) mRequest).deliverCache(mResponse.result);
                     } else {
+                        // 此时已经进行了网络数据回调,则将cacheAbandon设置为true,标识缓存已经弃用
+                        ((PolicyRequest) mRequest).cacheAbandon = true;
                         mRequest.deliverResponse(mResponse.result);
-                    }*/
+                    }
                 } else {
-                    mRequest.deliverError(mResponse.error);
+                    if (!((PolicyRequest) mRequest).cacheAbandon && mResponse.isCache()) {
+                        // 在cacheAbandon=false(接口数据尚未成功返回时),才返回缓存数据
+                        // 否则,则直接跳过
+                        ((PolicyRequest) mRequest).deliverCacheError(mResponse.error);
+                    } else {
+                        // 此时已经进行了网络数据回调,则将cacheAbandon设置为true,标识缓存已经弃用
+                        ((PolicyRequest) mRequest).cacheAbandon = true;
+                        mRequest.deliverError(mResponse.error);
+                    }
                 }
             } else {
                 // Deliver a normal response or error, depending.

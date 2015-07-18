@@ -17,11 +17,19 @@ import java.lang.reflect.Type;
  */
 public class GsonPolicyRequest<T> extends PolicyRequest<T> {
     private CallBack<T> mCallBack;
+    private CacheCallBack<T> mCacheCallBack;
     private Type mTypeOfT;
 
     public GsonPolicyRequest(String url, Type typeOfT, CallBack<T> callBack) {
         super(url, callBack);
         this.mCallBack = callBack;
+        this.mTypeOfT = typeOfT;
+    }
+
+    public GsonPolicyRequest(String url, Type typeOfT, CallBack<T> callBack, CacheCallBack<T> cacheCallBack) {
+        super(url, callBack);
+        this.mCallBack = callBack;
+        this.mCacheCallBack = cacheCallBack;
         this.mTypeOfT = typeOfT;
     }
 
@@ -31,15 +39,34 @@ public class GsonPolicyRequest<T> extends PolicyRequest<T> {
         this.mTypeOfT = typeOfT;
     }
 
+    public GsonPolicyRequest(RequestPolicy policy, String url, Type typeOfT, CallBack<T> callback, CacheCallBack<T> cacheCallBack) {
+        super(policy, url, callback);
+        this.mCallBack = callback;
+        this.mCacheCallBack = cacheCallBack;
+        this.mTypeOfT = typeOfT;
+    }
+
     public GsonPolicyRequest(RequestPolicy policy, int method, String url, Type typeOfT, CallBack<T> callback) {
         super(policy, method, url, callback);
         this.mCallBack = callback;
         this.mTypeOfT = typeOfT;
     }
 
+    public GsonPolicyRequest(RequestPolicy policy, int method, String url, Type typeOfT, CallBack<T> callback, CacheCallBack<T> cacheCallBack) {
+        super(policy, method, url, callback);
+        this.mCallBack = callback;
+        this.mTypeOfT = typeOfT;
+        this.mCacheCallBack = cacheCallBack;
+    }
+
     @Override
     protected void deliverCache(T response) {
-        mCallBack.onCacheResponse(response);
+        mCacheCallBack.onCacheResponse(response);
+    }
+
+    @Override
+    protected void deliverCacheError(VolleyError error) {
+        mCacheCallBack.onCacheErrorResponse(error);
     }
 
     @Override
