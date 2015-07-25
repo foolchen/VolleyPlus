@@ -40,7 +40,7 @@ RequestManager.addRequest(request, this);
 生成List
 
 ``` java
-GsonPolicyRequest<List<TestModel>> request = new GsonPolicyRequest<List<TestModel>>(url, Util.<TestModel>generateTypeOfList(), new CallBack<List<TestModel>>() {
+GsonPolicyRequest<List<TestModel>> request = new GsonPolicyRequest<List<TestModel>>(url, new TypeToken<List<TestModel>>() {}.getType(), new CallBack<List<TestModel>>() {
             @Override
             public void onErrorResponse(VolleyError error) {
 
