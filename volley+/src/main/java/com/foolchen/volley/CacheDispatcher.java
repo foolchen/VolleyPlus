@@ -167,7 +167,8 @@ public class CacheDispatcher extends Thread {
                     }
                 } else {
                     Cache.Entry entry = mCache.get(request.getCacheKey());
-                    if (policy == RequestPolicy.CACHE_ONLY || policy == RequestPolicy.CACHE_THEN_NET) {
+                    if (policy == RequestPolicy.CACHE_ONLY || policy == RequestPolicy.CACHE_THEN_NET
+                            || policy == RequestPolicy.CACHE_INVALID_THEM_NET) {
                         // 请求策略为CACHE_ONLY
                         if (entry == null) {
                             // 缓存为空,则回调空response
@@ -188,6 +189,10 @@ public class CacheDispatcher extends Thread {
                             response.intermediate = policy == RequestPolicy.CACHE_THEN_NET;
                             request.addMarker("cache-hit-deliver");
                             mDelivery.postResponse(request, response);
+                            if (policy == RequestPolicy.CACHE_INVALID_THEM_NET) {
+                                // 在CACHE_INVALID_THEM_NET模式下,如果缓存可用,则不再请求网络
+                                return;
+                            }
                         }
                         if (policy == RequestPolicy.CACHE_ONLY) {
                             // 如果为只读缓存,则此处不再继续

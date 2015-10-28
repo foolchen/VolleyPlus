@@ -13,5 +13,7 @@ public enum RequestPolicy {
     /** 只读缓存(无论缓存是否过期,都只读缓存,缓存不存在也不再请求网络) */
     CACHE_ONLY,
     /** 先读取缓存,并进行回调;之后再请求网络,请求结束后再次进行回调 */
-    CACHE_THEN_NET
+    CACHE_THEN_NET,
+    /** 缓存不存在/非法,则进行网络请求 */
+    CACHE_INVALID_THEM_NET
 }
