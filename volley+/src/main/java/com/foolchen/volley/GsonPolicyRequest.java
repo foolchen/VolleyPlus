@@ -3,6 +3,7 @@ package com.foolchen.volley;
 import com.foolchen.volley.custom.RequestPolicy;
 import com.foolchen.volley.toolbox.HttpHeaderParser;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
@@ -81,8 +82,12 @@ public class GsonPolicyRequest<T> extends PolicyRequest<T> {
         } catch (UnsupportedEncodingException e) {
             parsed = new String(response.data);
         }
-        T result = new Gson().fromJson(parsed, mTypeOfT);
-        return Response.success(result, HttpHeaderParser.parseCacheHeaders(response));
+        try {
+            T result = new Gson().fromJson(parsed, mTypeOfT);
+            return Response.success(result, HttpHeaderParser.parseCacheHeaders(response));
+        } catch (JsonSyntaxException e) {
+            return Response.error(new ParseError(e));
+        }
     }
 
     @Override
