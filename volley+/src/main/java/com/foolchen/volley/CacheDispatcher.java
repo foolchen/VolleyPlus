@@ -177,7 +177,7 @@ public class CacheDispatcher extends Thread {
                                     new NetworkResponse());
                             response.cache = true;
                             // Mark the response as intermediate.
-                            response.intermediate = policy == RequestPolicy.CACHE_THEN_NET;
+                            response.intermediate = policy == RequestPolicy.CACHE_THEN_NET || policy == RequestPolicy.CACHE_INVALID_THEM_NET;
                             request.addMarker("cache-miss-deliver-empty-response");
                             mDelivery.postResponse(request, response);
                         } else {
@@ -185,13 +185,15 @@ public class CacheDispatcher extends Thread {
                             Response<?> response = request.parseNetworkResponse(
                                     new NetworkResponse(entry.data, entry.responseHeaders));
                             response.cache = true;
-                            // Mark the response as intermediate.
-                            response.intermediate = policy == RequestPolicy.CACHE_THEN_NET;
                             request.addMarker("cache-hit-deliver");
                             mDelivery.postResponse(request, response);
                             if (policy == RequestPolicy.CACHE_INVALID_THEM_NET) {
                                 // 在CACHE_INVALID_THEM_NET模式下,如果缓存可用,则不再请求网络
-                                return;
+                                response.intermediate = false;// 此时标识为结束
+                                continue;
+                            } else {
+                                // Mark the response as intermediate.
+                                response.intermediate = policy == RequestPolicy.CACHE_THEN_NET;
                             }
                         }
                         if (policy == RequestPolicy.CACHE_ONLY) {
