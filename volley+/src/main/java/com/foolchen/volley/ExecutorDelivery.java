@@ -113,10 +113,9 @@ public class ExecutorDelivery implements ResponseDelivery {
                         // 否则,则直接跳过
                         ((PolicyRequest) mRequest).deliverCacheError(mResponse.error);
                     } else {
-                        // 此时已经进行了网络数据回调,则将cacheAbandon设置为true,标识缓存已经弃用
-                        // 此时不应再进行回调
-                        /*((PolicyRequest) mRequest).cacheAbandon = true;
-                        mRequest.deliverError(mResponse.error);*/
+                        // 此时已经进行了网络数据回调/不是缓存,则将cacheAbandon设置为true,标识缓存已经弃用
+                        ((PolicyRequest) mRequest).cacheAbandon = true;
+                        mRequest.deliverError(mResponse.error);
                     }
                 }
             } else {
