@@ -173,37 +173,23 @@ public class CacheDispatcher extends Thread {
                         if (entry == null) {
                             // 缓存为空,则回调空response
                             request.addMarker("cache-miss");
-                            Response<?> response = request.parseNetworkResponse(
-                                    new NetworkResponse());
+                            Response<?> response = Response.success(null, null);
                             response.cache = true;
                             // Mark the response as intermediate.
-                            response.intermediate = policy == RequestPolicy.CACHE_THEN_NET || policy == RequestPolicy.CACHE_INVALID_THEM_NET;
+                            response.intermediate = (policy == RequestPolicy.CACHE_THEN_NET || policy == RequestPolicy.CACHE_INVALID_THEM_NET);
                             request.addMarker("cache-miss-deliver-empty-response");
-                            mDelivery.postResponse(request, response);
+                            mDelivery.postResponse(request, response, response.intermediate ? createRunnable(request) : null);
                         } else {
                             // 缓存不为空,则回调缓存response
                             Response<?> response = request.parseNetworkResponse(
                                     new NetworkResponse(entry.data, entry.responseHeaders));
                             response.cache = true;
                             request.addMarker("cache-hit-deliver");
-                            mDelivery.postResponse(request, response);
-                            if (policy == RequestPolicy.CACHE_INVALID_THEM_NET) {
-                                // 在CACHE_INVALID_THEM_NET模式下,如果缓存可用,则不再请求网络
-                                response.intermediate = false;// 此时标识为结束
-                                continue;
-                            } else {
-                                // Mark the response as intermediate.
-                                response.intermediate = policy == RequestPolicy.CACHE_THEN_NET;
-                            }
+                            response.intermediate = (policy == RequestPolicy.CACHE_THEN_NET || policy == RequestPolicy.CACHE_INVALID_THEM_NET);
+
+                            request.setCacheEntry(entry);
+                            mDelivery.postResponse(request, response, response.intermediate ? createRunnable(request) : null);
                         }
-                        if (policy == RequestPolicy.CACHE_ONLY) {
-                            // 如果为只读缓存,则此处不再继续
-                            continue;
-                        }
-                        // 如果为先缓存后网络,则添加到网络请求队列中
-                        request.addMarker("add-request-to-network-queue");
-                        request.setCacheEntry(entry);
-                        mNetworkQueue.put(request);
                     }
                 }
 
@@ -214,5 +200,18 @@ public class CacheDispatcher extends Thread {
                 }
             }
         }
+    }
+
+    private Runnable createRunnable(final Request<?> request) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mNetworkQueue.put(request);
+                } catch (InterruptedException e) {
+                    // Not much we can do about this.
+                }
+            }
+        };
     }
 }
