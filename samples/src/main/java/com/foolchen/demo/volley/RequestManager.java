@@ -1,9 +1,7 @@
 package com.foolchen.demo.volley;
 
 import android.content.Context;
-import com.foolchen.volley.DefaultRetryPolicy;
-import com.foolchen.volley.Request;
-import com.foolchen.volley.RequestQueue;
+import com.foolchen.volley.*;
 import com.foolchen.volley.custom.OkHttpClientStack;
 import com.foolchen.volley.toolbox.Volley;
 
@@ -26,6 +24,7 @@ public class RequestManager {
     /** 初始化请求队列 */
     public static void init(Context context) {
         mRequestQueue = Volley.newRequestQueue(context, new OkHttpClientStack());
+        SyncVolley.init(new OkHttpClientStack());
     }
 
     /**
@@ -71,5 +70,9 @@ public class RequestManager {
                 /*DefaultRetryPolicy.DEFAULT_MAX_RETRIES*/0,
                 /*DefaultRetryPolicy.DEFAULT_BACKOFF_MULT*/0));
         addRequest(request, tag);
+    }
+
+    public static <T> Response<T> executeRequest(Request<T> request) throws VolleyError {
+        return SyncVolley.executeRequest(request);
     }
 }

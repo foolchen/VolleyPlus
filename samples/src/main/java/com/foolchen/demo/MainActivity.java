@@ -6,8 +6,8 @@ import android.text.Html;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import butterknife.OnClick;
 import com.foolchen.demo.volley.RequestManager;
 import com.foolchen.volley.CacheCallBack;
@@ -18,14 +18,14 @@ import com.foolchen.volley.custom.RequestPolicy;
 
 public class MainActivity extends AppCompatActivity {
 
-    @InjectView(R.id.text_result) TextView mTextResult;
-    @InjectView(R.id.spinner) Spinner mSpinner;
+    @Bind(R.id.text_result) TextView mTextResult;
+    @Bind(R.id.spinner) Spinner mSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ButterKnife.inject(this);
+        ButterKnife.bind(this);
 
         initSpinner();
     }
